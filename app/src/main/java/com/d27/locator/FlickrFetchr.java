@@ -1,5 +1,6 @@
 package com.d27.locator;
 
+import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
 
@@ -25,7 +26,7 @@ public class FlickrFetchr {
             .appendQueryParameter("api_key", API_KEY)
             .appendQueryParameter("format", "json")
             .appendQueryParameter("nojsoncallback", "1")
-            .appendQueryParameter("extras", "url_s")
+            .appendQueryParameter("extras", "url_s, geo")
             .build();
 
     List<GalleryItem> items = new ArrayList<>();
@@ -86,6 +87,17 @@ public class FlickrFetchr {
         return uriBuilder.build().toString();
     }
 
+    private String buildUrl(Location location) {
+        return ENDPOINT.buildUpon()
+                .appendQueryParameter("method", SEARCH_METHOD)
+                .appendQueryParameter("lat", ""+location.getLatitude())
+                .appendQueryParameter("lon", ""+location.getLongitude())
+                .build().toString()
+                ;
+
+
+    }
+
     public List<GalleryItem> fetchRecentPhotos() {
         String url = buildUrl(FETCH_RECENTS_METHOD, null);
         return downloadGalleryItems(url);
@@ -93,6 +105,10 @@ public class FlickrFetchr {
 
     public List<GalleryItem> searchPhotos(String query) {
         String url = buildUrl(SEARCH_METHOD, query);
+        return downloadGalleryItems(url);
+    }
+    public List<GalleryItem> searchPhotos(Location location) {
+        String url = buildUrl(location);
         return downloadGalleryItems(url);
     }
 
@@ -112,6 +128,8 @@ public class FlickrFetchr {
                 }
                 item.setUrl(photoJsonObject.getString("url_s"));
                 item.setOwner(photoJsonObject.getString("owner"));
+                item.setLat(photoJsonObject.getDouble("latitude"));
+                item.setLon(photoJsonObject.getDouble("longitude"));
                 items.add(item);
             }
         } catch (JSONException e) {
